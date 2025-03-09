@@ -70,11 +70,12 @@ class SC8E{
 				return 1;
 			}
 		}
-		void SYS_CLS(){
-			for(int x = 0; x <= 64; x++){
-				for(int y = 0; y <= 32; y++){
+		void SYS_CLEAR(){
+			for(int x = 0; x < 64; x++){
+				for(int y = 0; y < 32; y++){
 					display[x][y] = 0x00;
 				}
+
 			}
 		}
 		WORD SYS_GETOP(){
@@ -86,7 +87,7 @@ class SC8E{
 		}
 
 		void OP_00E0(){
-			SYS_CLS();
+			SYS_CLEAR();
 		}
 		void OP_00EE(){
 			return;
@@ -336,7 +337,7 @@ class SC8E{
 
 
 int main(){
-	SC8E em = SC8E(384, 192, 6);
+	SC8E em = SC8E(764, 384, 12);
 
 	cout << " ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ " << endl;
 	cout << "▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌" << endl;
@@ -377,11 +378,11 @@ int main(){
 		em.SYS_DECODE(em.SYS_GETOP());
 		for(int x = 0; x <= 64; x++){
 			for(int y = 0; y <= 32; y++){
-				em.SYS_CLS();
 				em.SC8E_Draw(x, y);
 			}
 		}
 		em.SC8E_Render();
+		em.SYS_CLEAR();
 	}
 
 	em.SC8E_QUIT();
