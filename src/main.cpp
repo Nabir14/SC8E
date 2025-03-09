@@ -31,7 +31,7 @@ class SC8E{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			windowWidth = w;
 			windowHeight = h;
-			pixelScale = s;
+			pixelScale = s;	
 		}
 
 		void SC8E_QUIT(){
@@ -41,21 +41,21 @@ class SC8E{
 			SDL_DestroyRenderer(renderer);
 			renderer = NULL;
 		}
-
 		void SC8E_ClearScreen(){
 			SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
 			SDL_RenderClear(renderer);
 		}
-
-		void SC8E_DrawPixel(int x, int y){
-			SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-			SDL_RenderDrawPoint(renderer, x, y);
+		void SC8E_Draw(int x, int y){
+			if(display[x][y] == 1){
+				SDL_Rect pixel = {x*pixelScale, y*pixelScale, pixelScale, pixelScale};
+				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_RenderFillRect(renderer, &pixel);
+			}
 		}
-
 		void SC8E_Render(){
 			SDL_RenderPresent(renderer);
 		}
-
+		
 		int SYS_RESET(const char* path){
 			addrI = 0;
 			pc = 0x200;
@@ -70,7 +70,13 @@ class SC8E{
 				return 1;
 			}
 		}
-
+		void SYS_CLS(){
+			for(int x = 0; x <= 64; x++){
+				for(int y = 0; y <= 32; y++){
+					display[x][y] = 0x00;
+				}
+			}
+		}
 		WORD SYS_GETOP(){
 			WORD opcode = mem[pc];
 			opcode <<= 8;
@@ -80,7 +86,7 @@ class SC8E{
 		}
 
 		void OP_00E0(){
-			SC8E_ClearScreen();
+			SYS_CLS();
 		}
 		void OP_00EE(){
 			return;
@@ -209,9 +215,54 @@ class SC8E{
 				pc += 2;
 			}
 		}
+		void OP_ANNN(WORD opcode){
+			addrI = opcode & 0x0FFF;
+		}
+		void OP_BNNN(WORD opcode){
+			pc = reg[0] + (opcode & 0x0FFF);
+		}
+		void OP_CXNN(WORD opcode){
+			int X = opcode & 0x0F00;
+			reg[X] = 10 & (opcode & 0x00FF);
+		}
+		void OP_DXYN(WORD opcode){
+			int X = opcode & 0x0F00;
+			int Y = opcode & 0x00F0;
+			X >>= 8;
+			Y >>= 4;
+			int height = opcode & 0x000F;
+			int originX = reg[X];
+			int originY = reg[Y];
+			reg[0xF] = 0;
+			for(int y = 0; y < height; y++){
+				BYTE spriteData = mem[addrI+y];
+				int xBit = 7;
+				for(int x = 0; x < 8; x++, xBit--){
+					int mask = 1 << xBit;
+					if(spriteData & mask){
+						int posX = originX + x;
+						int posY = originY + y;
+						if(display[x][y] == 1){
+							reg[0xF] = 1;
+						}
+						display[x][y] ^= 1;
+					}	
+				}
+			}
+		}
 
 		void SYS_DECODE(WORD opcode){
 			switch(opcode & 0xF000){
+				case 0x0000:
+					switch(opcode & 0x000F){
+						case 0x0000:
+							OP_00E0();
+							break;
+						case 0x000E:
+							OP_00EE();
+							break;
+					}
+					break;
 				case 0x1000:
 					OP_1NNN(opcode);
 					break;
@@ -267,15 +318,17 @@ class SC8E{
 				case 0x9000:
 					OP_9XY0(opcode);
 					break;
-				case 0x0000:
-					switch(opcode & 0x000F){
-						case 0x0000:
-							OP_00E0();
-							break;
-						case 0x000E:
-							OP_00EE();
-							break;
-					}
+				case 0xD000:
+					OP_DXYN(opcode);
+					break;
+				case 0xA000:
+					OP_ANNN(opcode);
+					break;
+				case 0xB000:
+					OP_BNNN(opcode);
+					break;
+				case 0xC000:
+					OP_CXNN(opcode);
 					break;
 			}
 		}
@@ -283,7 +336,7 @@ class SC8E{
 
 
 int main(){
-	SC8E em = SC8E(640, 480, 1);
+	SC8E em = SC8E(384, 192, 6);
 
 	cout << " ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ " << endl;
 	cout << "▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌" << endl;
@@ -322,6 +375,12 @@ int main(){
 		}
 		em.SC8E_ClearScreen();
 		em.SYS_DECODE(em.SYS_GETOP());
+		for(int x = 0; x <= 64; x++){
+			for(int y = 0; y <= 32; y++){
+				em.SYS_CLS();
+				em.SC8E_Draw(x, y);
+			}
+		}
 		em.SC8E_Render();
 	}
 
