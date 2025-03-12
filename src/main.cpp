@@ -251,7 +251,35 @@ class SC8E{
 				}
 			}
 		}
-
+		void OP_FX1E(WORD opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			addrI += reg[X];
+		}
+		void OP_FX33(WORD opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			int regValue = reg[X];
+			mem[addrI] = regValue % 100;
+			mem[addrI + 1] = (regValue / 10) % 10;
+			mem[addrI + 2] = regValue % 10;
+		}
+		void OP_FX55(WORD opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			for(int i = 0; i <= X; i++){
+				mem[addrI+i] = reg[i];
+			}
+			addrI = addrI+X+1;
+		}
+		void OP_FX65(WORD opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			for(int i = 0; i <= X; i++){
+				reg[i] = mem[addrI+i];
+			}
+			addrI = addrI+X+1;	
+		}
 		void SYS_DECODE(WORD opcode){
 			switch(opcode & 0xF000){
 				case 0x0000:
@@ -319,9 +347,6 @@ class SC8E{
 				case 0x9000:
 					OP_9XY0(opcode);
 					break;
-				case 0xD000:
-					OP_DXYN(opcode);
-					break;
 				case 0xA000:
 					OP_ANNN(opcode);
 					break;
@@ -331,6 +356,26 @@ class SC8E{
 				case 0xC000:
 					OP_CXNN(opcode);
 					break;
+				case 0xD000:
+					OP_DXYN(opcode);
+					break;
+				case 0xF000:
+					switch(opcode & 0xF000){
+						case 0x001E:
+							OP_FX1E(opcode);
+							break;
+						case 0x0033:
+							OP_FX33(opcode);
+							break;
+						case 0x0055:
+							OP_FX55(opcode);
+							break;
+						case 0x0065:
+							OP_FX65(opcode);
+							break;
+					}
+					break;
+
 			}
 		}
 };
