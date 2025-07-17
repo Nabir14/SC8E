@@ -52,7 +52,9 @@ class SC8E{
 			windowHeight = h;
 			pixelScale = s;	
 		}
-
+		void setTitle(const char* title){
+			SDL_SetWindowTitle(window, title);
+		}
 		void SC8E_QUIT(){
 			SDL_DestroyRenderer(renderer);
 			renderer = NULL;
@@ -473,6 +475,7 @@ int main(){
 		return 0;
 	}else if(em.SYS_INIT(pathArray) == 0){
 		cout << "SC8E_LOG: Rom Loaded Successfully" << endl;
+		em.setTitle(input.c_str());
 	}else{
 		cerr << "SC8E_ERROR: Rom Could Not Be Loaded Properly" << endl;
 		return 0;
