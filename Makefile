@@ -1,5 +1,5 @@
 all: clean compile
 compile:
-	g++ src/main.cpp -o sc8e -lSDL2
+	g++ src/main.cpp -o sc8e -lSDL3
 clean:
 	rm -rf sc8e
