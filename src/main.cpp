@@ -166,35 +166,35 @@ class SC8E{
 			int Y = opcode & 0x00F0;
 			X >>= 8;
 			Y >>= 4;
-			reg[X] = Y;
+			reg[X] = reg[Y];
 		}
 		void OP_8XY1(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			int Y = opcode & 0x00F0;
 			X >>= 8;
 			Y >>= 4;
-			reg[X] |= Y;
+			reg[X] |= reg[Y];
 		}
 		void OP_8XY2(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			int Y = opcode & 0x00F0;
 			X >>= 8;
 			Y >>= 4;
-			reg[X] &= Y;
+			reg[X] &= reg[Y];
 		}
 		void OP_8XY3(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			int Y = opcode & 0x00F0;
 			X >>= 8;
 			Y >>= 4;
-			reg[X] ^= Y;
+			reg[X] ^= reg[Y];
 		}
 		void OP_8XY4(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			int Y = opcode & 0x00F0;
 			X >>= 8;
 			Y >>= 4;
-			reg[X] = X+Y;
+			reg[X] = reg[X] + reg[Y];
 		}
 		void OP_8XY5(unsigned short opcode){
 			reg[0xF] = 1;
@@ -205,7 +205,7 @@ class SC8E{
 			if(reg[Y] > reg[X]){
 				reg[0xF] = 0;
 			}else{
-				reg[X] = X-Y;
+				reg[X] = reg[X] - reg[Y];
 			}
 		}
 		void OP_8XY6(unsigned short opcode){
@@ -224,7 +224,7 @@ class SC8E{
 			if(reg[Y] < reg[X]){
 				reg[0xF] = 0;
 			}else{
-				reg[X] = Y-X;
+				reg[X] = reg[Y] - reg[X];
 			}
 		}
 		void OP_8XYE(unsigned short opcode){
@@ -270,10 +270,10 @@ class SC8E{
 					if(spriteData & mask){
 						int posX = originX + x;
 						int posY = originY + y;
-						if(display[x][y] == 1){
+						if(display[posX][posY] == 1){
 							reg[0xF] = 1;
 						}else{
-							display[x][y] ^= 1;
+							display[posX][posY] ^= 1;
 						}
 					}	
 				}
@@ -450,7 +450,7 @@ class SC8E{
 
 
 int main(){
-	SC8E em = SC8E(764, 384, 12);
+	SC8E em = SC8E(764, 384, 4);
 
 	cout << " ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ " << endl;
 	cout << "▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌" << endl;
@@ -489,13 +489,12 @@ int main(){
 		}
 		em.SC8E_ClearScreen();
 		em.SYS_DECODE(em.SYS_GETOP());
-		for(int x = 0; x <= 64; x++){
-			for(int y = 0; y <= 32; y++){
+		for(int x = 0; x < 64; x++){
+			for(int y = 0; y < 32; y++){
 				em.SC8E_Draw(x, y);
 			}
 		}
 		em.SC8E_Render();
-		em.SYS_CLEAR();
 	}
 
 	em.SC8E_QUIT();
