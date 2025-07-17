@@ -2,7 +2,6 @@
 #include <bits/stdc++.h>
 #include <cstring>
 #include <cstdlib>
-#include <vector>
 #include <iomanip>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -66,7 +65,7 @@ class SC8E{
 			SDL_RenderClear(renderer);
 		}
 		void SC8E_Draw(int x, int y){
-			if(display[x][y] > 1){
+			if(display[x][y] == 1){
 				SDL_FRect pixel = {x*pixelScale, y*pixelScale, pixelScale, pixelScale};
 				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderFillRect(renderer, &pixel);
@@ -251,7 +250,7 @@ class SC8E{
 		}
 		void OP_CXNN(unsigned short opcode){
 			int X = opcode & 0x0F00;
-			reg[X] = 10 & (opcode & 0x00FF);
+			reg[X] = (rand() % 256) & (opcode & 0x00FF);
 		}
 		void OP_DXYN(unsigned short opcode){
 			int X = opcode & 0x0F00;
@@ -272,9 +271,8 @@ class SC8E{
 						int posY = originY + y;
 						if(display[posX][posY] == 1){
 							reg[0xF] = 1;
-						}else{
-							display[posX][posY] ^= 1;
 						}
+						display[posX][posY] ^= 1;
 					}	
 				}
 			}
@@ -302,7 +300,7 @@ class SC8E{
 		void OP_FX29(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			X >>= 8;
-			addrI = fontset[reg[X]];
+			addrI = reg[X] * 5;
 		}
 		void OP_FX33(unsigned short opcode){
 			int X = opcode & 0x0F00;
@@ -408,7 +406,7 @@ class SC8E{
 					OP_DXYN(opcode);
 					break;
 				case 0xF000:
-					switch(opcode & 0xF000){
+					switch(opcode & 0x00FF){
 						case 0x0007:
 							OP_FX07(opcode);
 							break;
@@ -450,7 +448,7 @@ class SC8E{
 
 
 int main(){
-	SC8E em = SC8E(764, 384, 4);
+	SC8E em = SC8E(764, 384, 12);
 
 	cout << " ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ " << endl;
 	cout << "▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌" << endl;
