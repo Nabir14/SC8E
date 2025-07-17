@@ -40,6 +40,7 @@ class SC8E{
 		unsigned char keypad[0xF];
 		unsigned int windowWidth;
 		unsigned int windowHeight;
+		unsigned int key;
 		float pixelScale;
 		SDL_Window* window;
 		SDL_Renderer* renderer;
@@ -279,6 +280,32 @@ class SC8E{
 				}
 			}
 		}
+		void OP_EX9E(unsigned short opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			if(key == reg[X]){
+				pc += 4;
+			}else{
+				pc += 2;
+			}
+		}
+		void OP_EXA1(unsigned short opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			if(key != reg[X]){
+				pc += 4;
+			}else{
+				pc += 2;
+			}
+		}
+		void OP_FX0A(unsigned short opcode){
+			int X = opcode & 0x0F00;
+			X >>= 8;
+			if(key != 0x00){
+				reg[X] = key;
+				pc += 2;
+			}
+		}
 		void OP_FX1E(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			X >>= 8;
@@ -407,6 +434,15 @@ class SC8E{
 				case 0xD000:
 					OP_DXYN(opcode);
 					break;
+				case 0xE000:
+					switch(opcode & 0x00FF){
+						case 0x009E:
+							OP_EX9E(opcode);
+							break;
+						case 0x00A1:
+							OP_EXA1(opcode);
+							break;
+					}
 				case 0xF000:
 					switch(opcode & 0x00FF){
 						case 0x0007:
@@ -433,8 +469,12 @@ class SC8E{
 						case 0x0065:
 							OP_FX65(opcode);
 							break;
+						case 0x000A:
+							OP_FX0A(opcode);
 					}
 					break;
+				default:
+					cout << "SC8E_ERROR: ILLEGAL INSTRUCTION!" << endl;
 			}
 			if(delayTimer > 0){
 				delayTimer--;
@@ -445,6 +485,60 @@ class SC8E{
 				}
 				soundTimer--;
 			}
+		}
+		void SC8E_HandleKeyEvents(SDL_Event event){
+			switch(event.key.key){
+				case SDLK_1:
+					key = 0x01;
+					break;
+				case SDLK_2:
+					key = 0x02;
+					break;
+				case SDLK_3:
+					key = 0x03;
+					break;
+				case SDLK_4:
+					key = 0x04;
+					break;
+				case SDLK_5:
+					key = 0x05;
+					break;
+				case SDLK_6:
+					key = 0x06;
+					break;
+				case SDLK_7:
+					key = 0x07;
+					break;
+				case SDLK_8:
+					key = 0x08;
+					break;
+				case SDLK_9:
+					key = 0x09;
+					break;
+				case SDLK_A:
+					key = 0x0A;
+					break;
+				case SDLK_B:
+					key = 0x0B;
+					break;
+				case SDLK_C:
+					key = 0x0C;
+					break;
+				case SDLK_D:
+					key = 0x0D;
+					break;
+				case SDLK_E:
+					key = 0x0E;
+					break;
+				case SDLK_F:
+					key = 0x0F;
+					break;
+				default:
+					key = 0x00;	
+			}
+		}
+		void SC8E_ResetKeyEvent(){
+			key = 0x00;
 		}
 };
 
@@ -486,6 +580,10 @@ int main(){
 		while(SDL_PollEvent(&e)){
 			if(e.type == SDL_EVENT_QUIT){
 				run = false;
+			}else if(e.type == SDL_EVENT_KEY_DOWN){
+				em.SC8E_HandleKeyEvents(e);
+			}else if(e.type == SDL_EVENT_KEY_UP){
+				em.SC8E_ResetKeyEvent();
 			}
 		}
 		em.SC8E_ClearScreen();
@@ -496,8 +594,8 @@ int main(){
 			}
 		}
 		em.SC8E_Render();
+		SDL_Delay((1/60)*1000);
 	}
-
 	em.SC8E_QUIT();
 	return 0;
 }
