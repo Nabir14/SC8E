@@ -284,8 +284,6 @@ class SC8E{
 			int X = opcode & 0x0F00;
 			X >>= 8;
 			if(key == reg[X]){
-				pc += 4;
-			}else{
 				pc += 2;
 			}
 		}
@@ -293,8 +291,6 @@ class SC8E{
 			int X = opcode & 0x0F00;
 			X >>= 8;
 			if(key != reg[X]){
-				pc += 4;
-			}else{
 				pc += 2;
 			}
 		}
@@ -303,7 +299,8 @@ class SC8E{
 			X >>= 8;
 			if(key != 0x00){
 				reg[X] = key;
-				pc += 2;
+			}else{
+				pc -= 2;
 			}
 		}
 		void OP_FX1E(unsigned short opcode){
@@ -477,11 +474,13 @@ class SC8E{
 					cout << "SC8E_ERROR: ILLEGAL INSTRUCTION!" << endl;
 			}
 			if(delayTimer > 0){
+				SDL_Delay((1/60)*1000);
 				delayTimer--;
 			}
 			if(soundTimer > 0){
+				SDL_Delay((1/60)*1000);
 				if(soundTimer==1){
-					printf("\a");
+					printf("BEEP!");
 				}
 				soundTimer--;
 			}
@@ -594,7 +593,6 @@ int main(){
 			}
 		}
 		em.SC8E_Render();
-		SDL_Delay((1/60)*1000);
 	}
 	em.SC8E_QUIT();
 	return 0;
