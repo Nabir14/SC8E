@@ -40,7 +40,7 @@ class SC8E{
 		unsigned char keypad[0xF];
 		unsigned int windowWidth;
 		unsigned int windowHeight;
-		unsigned int key;
+		int key;
 		float pixelScale;
 		SDL_Window* window;
 		SDL_Renderer* renderer;
@@ -86,7 +86,7 @@ class SC8E{
 			memset(display, 0, sizeof(display));
 			memset(stack, 0, sizeof(stack));
 			for(int i = 0; i < 80; i++){
-				mem[i] = fontset[i];
+				mem[0x50 + i] = fontset[i];
 			}	
 			FILE *f = fopen(path, "rb");
 			if(f != NULL){
@@ -118,7 +118,8 @@ class SC8E{
 			SYS_CLEAR();
 		}
 		void OP_00EE(){
-			return;
+			pc = stack[sp];
+			sp--;
 		}
 		void OP_1NNN(unsigned short opcode){
 			pc = opcode & 0x0FFF;
@@ -297,7 +298,7 @@ class SC8E{
 		void OP_FX0A(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			X >>= 8;
-			if(key != 0x00){
+			if(key != -1){
 				reg[X] = key;
 			}else{
 				pc -= 2;
@@ -332,9 +333,9 @@ class SC8E{
 			int X = opcode & 0x0F00;
 			X >>= 8;
 			int regValue = reg[X];
-			mem[addrI] = regValue % 100;
+			mem[addrI] = regValue / 100;
 			mem[addrI + 1] = (regValue / 10) % 10;
-			mem[addrI + 2] = regValue % 10;
+			mem[addrI + 2] = (regValue % 100) % 10;
 		}
 		void OP_FX55(unsigned short opcode){
 			int X = opcode & 0x0F00;
@@ -440,6 +441,7 @@ class SC8E{
 							OP_EXA1(opcode);
 							break;
 					}
+					break;
 				case 0xF000:
 					switch(opcode & 0x00FF){
 						case 0x0007:
@@ -468,6 +470,7 @@ class SC8E{
 							break;
 						case 0x000A:
 							OP_FX0A(opcode);
+							break;
 					}
 					break;
 				default:
@@ -487,6 +490,8 @@ class SC8E{
 		}
 		void SC8E_HandleKeyEvents(SDL_Event event){
 			switch(event.key.key){
+				case SDLK_X:
+					key = 0x00;
 				case SDLK_1:
 					key = 0x01;
 					break;
@@ -496,44 +501,44 @@ class SC8E{
 				case SDLK_3:
 					key = 0x03;
 					break;
-				case SDLK_4:
+				case SDLK_Q:
 					key = 0x04;
 					break;
-				case SDLK_5:
+				case SDLK_W:
 					key = 0x05;
 					break;
-				case SDLK_6:
+				case SDLK_E:
 					key = 0x06;
 					break;
-				case SDLK_7:
+				case SDLK_A:
 					key = 0x07;
 					break;
-				case SDLK_8:
+				case SDLK_S:
 					key = 0x08;
 					break;
-				case SDLK_9:
+				case SDLK_D:
 					key = 0x09;
 					break;
-				case SDLK_A:
+				case SDLK_Z:
 					key = 0x0A;
 					break;
-				case SDLK_B:
+				case SDLK_C:
 					key = 0x0B;
 					break;
-				case SDLK_C:
+				case SDLK_4:
 					key = 0x0C;
 					break;
-				case SDLK_D:
+				case SDLK_R:
 					key = 0x0D;
 					break;
-				case SDLK_E:
+				case SDLK_F:
 					key = 0x0E;
 					break;
-				case SDLK_F:
+				case SDLK_V:
 					key = 0x0F;
 					break;
 				default:
-					key = 0x00;	
+					key = -1;	
 			}
 		}
 		void SC8E_ResetKeyEvent(){
