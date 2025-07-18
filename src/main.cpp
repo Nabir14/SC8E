@@ -85,6 +85,7 @@ class SC8E{
 			memset(mem, 0, sizeof(mem));
 			memset(display, 0, sizeof(display));
 			memset(stack, 0, sizeof(stack));
+			sp = 0;
 			for(int i = 0; i < 80; i++){
 				mem[0x50 + i] = fontset[i];
 			}	
@@ -262,13 +263,15 @@ class SC8E{
 			X >>= 8;
 			Y >>= 4;
 			int height = opcode & 0x000F;
-			int originX = reg[X];
-			int originY = reg[Y];
+			int originX = reg[X] % 64;
+			int originY = reg[Y] % 32;
 			reg[0xF] = 0;
 			for(int y = 0; y < height; y++){
+				if(originY + y >= 32) break;
 				unsigned char spriteData = mem[addrI+y];
 				int xBit = 7;
 				for(int x = 0; x < 8; x++, xBit--){
+					if (originX + x >= 64) break;
 					int mask = 1 << xBit;
 					if(spriteData & mask){
 						int posX = originX + x;
@@ -327,7 +330,7 @@ class SC8E{
 		void OP_FX29(unsigned short opcode){
 			int X = opcode & 0x0F00;
 			X >>= 8;
-			addrI = reg[X] * 5;
+			addrI = 0x50 + reg[X] * 5;
 		}
 		void OP_FX33(unsigned short opcode){
 			int X = opcode & 0x0F00;
@@ -492,6 +495,7 @@ class SC8E{
 			switch(event.key.key){
 				case SDLK_X:
 					key = 0x00;
+					break;
 				case SDLK_1:
 					key = 0x01;
 					break;
@@ -542,7 +546,7 @@ class SC8E{
 			}
 		}
 		void SC8E_ResetKeyEvent(){
-			key = 0x00;
+			key = -1;
 		}
 };
 
