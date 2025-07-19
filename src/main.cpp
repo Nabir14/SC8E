@@ -324,7 +324,7 @@ class SC8E{
 			delayTimer = reg[X];
 		}
 		void OP_FX18(unsigned short opcode){
-			int X = opcode & 0x0F00;
+			int X = opcode & 0x0EFF;
 			X >>= 8;
 			soundTimer = reg[X];
 		}
