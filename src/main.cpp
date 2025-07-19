@@ -255,6 +255,7 @@ class SC8E{
 		}
 		void OP_CXNN(unsigned short opcode){
 			int X = opcode & 0x0F00;
+			X >>= 8;
 			reg[X] = (rand() % 256) & (opcode & 0x00FF);
 		}
 		void OP_DXYN(unsigned short opcode){
